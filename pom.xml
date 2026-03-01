@@ -49,9 +49,10 @@
     </scm>
 
     <properties>
-        <jacoco.maven.plugin.version>0.8.2</jacoco.maven.plugin.version>
+        <jacoco.maven.plugin.version>0.8.11</jacoco.maven.plugin.version>
         <sling.java.version>8</sling.java.version>
         <project.build.outputTimestamp>2021-04-23T16:34:16Z</project.build.outputTimestamp>
+        <sonar.coverage.jacoco.xmlReportPaths>${project.build.directory}/site/jacoco/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
     </properties>
 
     <!-- ======================================================================= -->
@@ -115,7 +116,7 @@
         <profile>
             <id>coverage-report</id>
             <activation>
-                <activeByDefault>false</activeByDefault>
+                <activeByDefault>true</activeByDefault>
             </activation>
             <build>
                 <plugins>
