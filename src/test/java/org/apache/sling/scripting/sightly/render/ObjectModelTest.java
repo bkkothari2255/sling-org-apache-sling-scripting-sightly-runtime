@@ -36,8 +36,6 @@ import org.apache.sling.scripting.sightly.render.testobjects.Person;
 import org.apache.sling.scripting.sightly.render.testobjects.TestEnum;
 import org.apache.sling.scripting.sightly.render.testobjects.TestEnum2;
 import org.apache.sling.scripting.sightly.render.testobjects.internal.AdultFactory;
-import org.hamcrest.MatcherAssert;
-import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
@@ -156,8 +154,8 @@ public class ObjectModelTest {
         assertEquals(testList, ObjectModel.toCollection(testArray));
         assertEquals(testList, ObjectModel.toCollection(testPrimitiveArray));
         assertEquals(testList, ObjectModel.toCollection(testList));
-        MatcherAssert.assertThat(
-                ObjectModel.toCollection(map), Matchers.contains(map.keySet().toArray()));
+        Collection<Object> mapCollection = ObjectModel.toCollection(map);
+        assertTrue(mapCollection.containsAll(map.keySet()) && mapCollection.size() == map.size());
         ArrayList<Integer> arrayList = new ArrayList<>(testList);
         assertEquals(testList, ObjectModel.toCollection(arrayList));
         assertEquals(testList, ObjectModel.toCollection(testList.iterator()));
