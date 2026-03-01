@@ -229,23 +229,23 @@ public class ObjectModelTest {
         assertEquals("two", ObjectModel.resolveProperty(stringMap, 2));
         Person johnDoe = AdultFactory.createAdult("John", "Doe");
         assertEquals(
-                "Expected to be able to access public static final constants.",
                 1l,
-                ObjectModel.resolveProperty(johnDoe, "CONSTANT"));
+                ObjectModel.resolveProperty(johnDoe, "CONSTANT"),
+                "Expected to be able to access public static final constants.");
         assertNull(
-                "Did not expect to be able to access public fields from package protected classes.",
-                ObjectModel.resolveProperty(johnDoe, "TODAY"));
+                ObjectModel.resolveProperty(johnDoe, "TODAY"),
+                "Did not expect to be able to access public fields from package protected classes.");
         assertEquals(
-                "Expected to be able to access an array's length property.",
                 3,
-                ObjectModel.resolveProperty(testArray, "length"));
+                ObjectModel.resolveProperty(testArray, "length"),
+                "Expected to be able to access an array's length property.");
         assertNotNull(
-                "Expected not null result for invocation of interface method on implementation class.",
-                ObjectModel.resolveProperty(johnDoe, "lastName"));
+                ObjectModel.resolveProperty(johnDoe, "lastName"),
+                "Expected not null result for invocation of interface method on implementation class.");
         assertNull(
-                "Expected null result for public method available on implementation but not exposed by interface.",
-                ObjectModel.resolveProperty(johnDoe, "fullName"));
-        assertNull("Expected null result for inexistent method.", ObjectModel.resolveProperty(johnDoe, "nomethod"));
+                ObjectModel.resolveProperty(johnDoe, "fullName"),
+                "Expected null result for public method available on implementation but not exposed by interface.");
+        assertNull(ObjectModel.resolveProperty(johnDoe, "nomethod"), "Expected null result for inexistent method.");
 
         OptionalTest optionalTest = new OptionalTest();
         assertEquals(Optional.of("string"), ObjectModel.resolveProperty(optionalTest, "string"));
@@ -268,9 +268,9 @@ public class ObjectModelTest {
         assertNull(ObjectModel.resolveProperty(TestEnum.class, "INVALID"));
 
         assertEquals(
-                "Expected to be able to access public static final constants.",
                 TestEnum2.STR_CONSTANT,
-                ObjectModel.resolveProperty(TestEnum2.class, "STR_CONSTANT"));
+                ObjectModel.resolveProperty(TestEnum2.class, "STR_CONSTANT"),
+                "Expected to be able to access public static final constants.");
     }
 
     /**
