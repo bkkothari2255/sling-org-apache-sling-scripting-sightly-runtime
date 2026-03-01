@@ -20,6 +20,7 @@ package org.apache.sling.scripting.sightly.render;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -28,8 +29,8 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Optional;
-import java.util.Vector;
 
 import org.apache.sling.scripting.sightly.render.testobjects.Person;
 import org.apache.sling.scripting.sightly.render.testobjects.TestEnum;
@@ -48,6 +49,12 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class ObjectModelTest {
 
+    private static final String COMMA_DELIMITED_LIST = "1,2,3";
+    private static final String TEST_URI = "http://localhost/test";
+    private static final String STRING = "string";
+    private static final String INT = "int";
+    private static final String INTEGER = "integer";
+
     @Test
     public void testToBoolean() {
         assertFalse(ObjectModel.toBoolean(null));
@@ -65,22 +72,19 @@ public class ObjectModelTest {
         assertTrue(ObjectModel.toBoolean("TrUE"));
         Integer[] testArray = new Integer[] {1, 2, 3};
         int[] testPrimitiveArray = new int[] {1, 2, 3};
-        List testList = Arrays.asList(testArray);
+        List<?> testList = Arrays.asList(testArray);
         assertTrue(ObjectModel.toBoolean(testArray));
         assertTrue(ObjectModel.toBoolean(testPrimitiveArray));
         assertFalse(ObjectModel.toBoolean(new Integer[] {}));
         assertTrue(ObjectModel.toBoolean(testList));
         assertFalse(ObjectModel.toBoolean(Collections.emptyList()));
-        Map<String, Integer> map = new HashMap<String, Integer>() {
-            {
-                put("one", 1);
-                put("two", 2);
-            }
-        };
+        Map<String, Integer> map = new HashMap<>();
+        map.put("one", 1);
+        map.put("two", 2);
         assertTrue(ObjectModel.toBoolean(map));
-        assertFalse(ObjectModel.toBoolean(Collections.EMPTY_MAP));
+        assertFalse(ObjectModel.toBoolean(Collections.emptyMap()));
         assertTrue(ObjectModel.toBoolean(testList.iterator()));
-        assertFalse(ObjectModel.toBoolean(Collections.EMPTY_LIST.iterator()));
+        assertFalse(ObjectModel.toBoolean(Collections.emptyList().iterator()));
         assertTrue(ObjectModel.toBoolean(new Bag<>(testArray)));
         assertFalse(ObjectModel.toBoolean(new Bag<>(new Integer[] {})));
         assertTrue(ObjectModel.toBoolean(new Date()));
@@ -93,12 +97,7 @@ public class ObjectModelTest {
         assertTrue(ObjectModel.toBoolean(Optional.of("pass")));
         assertTrue(ObjectModel.toBoolean(Optional.of(1)));
         assertTrue(ObjectModel.toBoolean(new Object()));
-        Map<String, String> map2 = new HashMap<String, String>() {
-            @Override
-            public String toString() {
-                return null;
-            }
-        };
+        Map<String, String> map2 = new HashMap<>();
         assertFalse(ObjectModel.toBoolean(map2));
         map2.put("one", "entry");
         assertTrue(ObjectModel.toBoolean(map2));
@@ -128,11 +127,11 @@ public class ObjectModelTest {
         assertEquals("CONSTANT", ObjectModel.toString(TestEnum.CONSTANT));
         Integer[] testArray = new Integer[] {1, 2, 3};
         int[] testPrimitiveArray = new int[] {1, 2, 3};
-        List testList = Arrays.asList(testArray);
-        assertEquals("1,2,3", ObjectModel.toString(testList));
-        assertEquals("1,2,3", ObjectModel.toString(testArray));
-        assertEquals("1,2,3", ObjectModel.toString(testPrimitiveArray));
-        assertEquals("http://localhost/test", ObjectModel.toString(new URI("http://localhost/test")));
+        List<Integer> testList = Arrays.asList(testArray);
+        assertEquals(COMMA_DELIMITED_LIST, ObjectModel.toString(testList));
+        assertEquals(COMMA_DELIMITED_LIST, ObjectModel.toString(testArray));
+        assertEquals(COMMA_DELIMITED_LIST, ObjectModel.toString(testPrimitiveArray));
+        assertEquals(TEST_URI, ObjectModel.toString(new URI(TEST_URI)));
 
         assertEquals("", ObjectModel.toString(Optional.empty()));
         assertEquals("false", ObjectModel.toString(Optional.of(false)));
@@ -151,26 +150,23 @@ public class ObjectModelTest {
         Integer[] testArray = new Integer[] {1, 2, 3};
         int[] testPrimitiveArray = new int[] {1, 2, 3};
         List<Integer> testList = Arrays.asList(testArray);
-        Map<String, Integer> map = new HashMap<String, Integer>() {
-            {
-                put("one", 1);
-                put("two", 2);
-            }
-        };
+        Map<String, Integer> map = new HashMap<>();
+        map.put("one", 1);
+        map.put("two", 2);
         assertEquals(testList, ObjectModel.toCollection(testArray));
         assertEquals(testList, ObjectModel.toCollection(testPrimitiveArray));
         assertEquals(testList, ObjectModel.toCollection(testList));
         MatcherAssert.assertThat(
                 ObjectModel.toCollection(map), Matchers.contains(map.keySet().toArray()));
-        Vector<Integer> vector = new Vector<>(testList);
-        assertEquals(testList, ObjectModel.toCollection(vector.elements()));
+        ArrayList<Integer> arrayList = new ArrayList<>(testList);
+        assertEquals(testList, ObjectModel.toCollection(arrayList));
         assertEquals(testList, ObjectModel.toCollection(testList.iterator()));
         assertEquals(testList, ObjectModel.toCollection(new Bag<>(testArray)));
         String stringObject = "test";
         Integer numberObject = 1;
-        Collection stringCollection = ObjectModel.toCollection(stringObject);
+        Collection<Object> stringCollection = ObjectModel.toCollection(stringObject);
         assertTrue(stringCollection.size() == 1 && stringCollection.contains(stringObject));
-        Collection numberCollection = ObjectModel.toCollection(numberObject);
+        Collection<Object> numberCollection = ObjectModel.toCollection(numberObject);
         assertTrue(numberCollection.size() == 1 && numberCollection.contains(numberObject));
 
         List<Object> emptyList = Collections.emptyList();
@@ -184,16 +180,16 @@ public class ObjectModelTest {
     public void testCollectionToString() {
         assertEquals("", ObjectModel.collectionToString(null));
         Integer[] testArray = new Integer[] {1, 2, 3};
-        List testList = Arrays.asList(testArray);
-        assertEquals("1,2,3", ObjectModel.collectionToString(testList));
+        List<Integer> testList = Arrays.asList(testArray);
+        assertEquals(COMMA_DELIMITED_LIST, ObjectModel.collectionToString(testList));
     }
 
     @Test
     public void testFromIterator() {
         assertTrue(ObjectModel.fromIterator(null).isEmpty());
         Integer[] testArray = new Integer[] {1, 2, 3};
-        List testList = Arrays.asList(testArray);
-        assertEquals(testList, ObjectModel.fromIterator(testList.iterator()));
+        List<Integer> testList = Arrays.asList(testArray);
+        assertEquals(testList, ObjectModel.fromIterator((Iterator) testList.iterator()));
     }
 
     @Test
@@ -201,7 +197,7 @@ public class ObjectModelTest {
         assertNull(ObjectModel.resolveProperty(null, 0));
         assertNull(ObjectModel.resolveProperty(this, null));
         assertNull(ObjectModel.resolveProperty(null, null));
-        assertEquals(0, ObjectModel.resolveProperty(Collections.EMPTY_LIST, "size"));
+        assertEquals(0, ObjectModel.resolveProperty(Collections.emptyList(), "size"));
         Integer[] testArray = new Integer[] {1, 2, 3};
         assertEquals(2, ObjectModel.resolveProperty(testArray, 1));
         assertNull(ObjectModel.resolveProperty(testArray, 3));
@@ -210,21 +206,15 @@ public class ObjectModelTest {
         assertEquals(2, ObjectModel.resolveProperty(testList, 1));
         assertNull(ObjectModel.resolveProperty(testList, 3));
         assertNull(ObjectModel.resolveProperty(testList, -1));
-        Map<String, Integer> map = new HashMap<String, Integer>() {
-            {
-                put("one", 1);
-                put("two", 2);
-            }
-        };
+        Map<String, Integer> map = new HashMap<>();
+        map.put("one", 1);
+        map.put("two", 2);
         assertEquals(1, ObjectModel.resolveProperty(map, "one"));
         assertNull(ObjectModel.resolveProperty(map, null));
         assertNull(ObjectModel.resolveProperty(map, ""));
-        Map<Integer, String> stringMap = new HashMap<Integer, String>() {
-            {
-                put(1, "one");
-                put(2, "two");
-            }
-        };
+        Map<Integer, String> stringMap = new HashMap<>();
+        stringMap.put(1, "one");
+        stringMap.put(2, "two");
         assertEquals("one", ObjectModel.resolveProperty(stringMap, 1));
         assertEquals("two", ObjectModel.resolveProperty(stringMap, 2));
         Person johnDoe = AdultFactory.createAdult("John", "Doe");
@@ -248,13 +238,12 @@ public class ObjectModelTest {
         assertNull(ObjectModel.resolveProperty(johnDoe, "nomethod"), "Expected null result for inexistent method.");
 
         OptionalTest optionalTest = new OptionalTest();
-        assertEquals(Optional.of("string"), ObjectModel.resolveProperty(optionalTest, "string"));
-        assertEquals(Optional.of(1), ObjectModel.resolveProperty(optionalTest, "int"));
-        assertEquals(Optional.of(1), ObjectModel.resolveProperty(Optional.of(optionalTest), "int"));
-        assertEquals(Optional.of(Integer.valueOf(1)), ObjectModel.resolveProperty(optionalTest, "integer"));
-        assertEquals(
-                Optional.of(Integer.valueOf(1)), ObjectModel.resolveProperty(Optional.of(optionalTest), "integer"));
-        assertEquals(null, ObjectModel.resolveProperty(Optional.empty(), "integer"));
+        assertEquals(Optional.of(STRING), ObjectModel.resolveProperty(optionalTest, STRING));
+        assertEquals(Optional.of(1), ObjectModel.resolveProperty(optionalTest, INT));
+        assertEquals(Optional.of(1), ObjectModel.resolveProperty(Optional.of(optionalTest), INT));
+        assertEquals(Optional.of(Integer.valueOf(1)), ObjectModel.resolveProperty(optionalTest, INTEGER));
+        assertEquals(Optional.of(Integer.valueOf(1)), ObjectModel.resolveProperty(Optional.of(optionalTest), INTEGER));
+        assertEquals(null, ObjectModel.resolveProperty(Optional.empty(), INTEGER));
     }
 
     /**
@@ -298,12 +287,9 @@ public class ObjectModelTest {
         assertEquals(2, ObjectModel.getIndex(testList, 1));
         assertNull(ObjectModel.getIndex(testList, 3));
         assertNull(ObjectModel.getIndex(testList, -1));
-        Map<Integer, String> stringMap = new HashMap<Integer, String>() {
-            {
-                put(1, "one");
-                put(2, "two");
-            }
-        };
+        Map<Integer, String> stringMap = new HashMap<>();
+        stringMap.put(1, "one");
+        stringMap.put(2, "two");
         assertNull(ObjectModel.getIndex(stringMap, 1));
         assertNull(ObjectModel.getIndex(stringMap, 2));
     }
@@ -355,11 +341,16 @@ public class ObjectModelTest {
 
                 @Override
                 public T next() {
+                    if (!hasNext()) {
+                        throw new NoSuchElementException();
+                    }
                     return backingArray[index++];
                 }
 
                 @Override
-                public void remove() {}
+                public void remove() {
+                    throw new UnsupportedOperationException();
+                }
             };
         }
     }
@@ -370,7 +361,7 @@ public class ObjectModelTest {
         }
 
         public Optional<String> getString() {
-            return Optional.of("string");
+            return Optional.of(STRING);
         }
 
         public Optional<Integer> getInt() {
