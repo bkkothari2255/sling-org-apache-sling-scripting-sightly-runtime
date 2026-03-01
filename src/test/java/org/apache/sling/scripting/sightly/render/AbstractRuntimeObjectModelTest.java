@@ -46,7 +46,7 @@ public class AbstractRuntimeObjectModelTest {
         assertNull(runtimeObjectModel.resolveProperty(null, null));
         assertNull(runtimeObjectModel.resolveProperty(this, null));
         assertNull(runtimeObjectModel.resolveProperty(this, ""));
-        assertEquals(0, runtimeObjectModel.resolveProperty(Collections.EMPTY_LIST, "size"));
+        assertEquals(0, runtimeObjectModel.resolveProperty(Collections.emptyList(), "size"));
         assertNull(runtimeObjectModel.resolveProperty(null, null));
         int[] ints = new int[] {1, 2, 3};
         assertEquals(ints.length, runtimeObjectModel.resolveProperty(ints, "length"));
@@ -59,30 +59,21 @@ public class AbstractRuntimeObjectModelTest {
         assertEquals(2, runtimeObjectModel.resolveProperty(testList, 1));
         assertNull(runtimeObjectModel.resolveProperty(testList, 3));
         assertNull(runtimeObjectModel.resolveProperty(testList, -1));
-        Map<String, Integer> map = new HashMap<String, Integer>() {
-            {
-                put("one", 1);
-                put("two", 2);
-            }
-        };
+        Map<String, Integer> map = new HashMap<>();
+        map.put("one", 1);
+        map.put("two", 2);
         assertEquals(1, runtimeObjectModel.resolveProperty(map, "one"));
         assertNull(runtimeObjectModel.resolveProperty(map, null));
         assertNull(runtimeObjectModel.resolveProperty(map, ""));
-        Map<Integer, String> stringMap = new HashMap<Integer, String>() {
-            {
-                put(1, "one");
-                put(2, "two");
-            }
-        };
+        Map<Integer, String> stringMap = new HashMap<>();
+        stringMap.put(1, "one");
+        stringMap.put(2, "two");
         assertEquals("one", runtimeObjectModel.resolveProperty(stringMap, 1));
         assertEquals("two", runtimeObjectModel.resolveProperty(stringMap, 2));
-        Map<String, String> strings = new HashMap<String, String>() {
-            {
-                put("a", "one");
-                put("b", "two");
-            }
-        };
-        Record<String> record = new Record<String>() {
+        Map<String, String> strings = new HashMap<>();
+        strings.put("a", "one");
+        strings.put("b", "two");
+        Record<String> records = new Record<String>() {
             @Override
             public String getProperty(String name) {
                 return strings.get(name);
@@ -93,7 +84,7 @@ public class AbstractRuntimeObjectModelTest {
                 return strings.keySet();
             }
         };
-        assertEquals("one", runtimeObjectModel.resolveProperty(record, "a"));
+        assertEquals("one", runtimeObjectModel.resolveProperty(records, "a"));
     }
 
     @Test
@@ -146,14 +137,10 @@ public class AbstractRuntimeObjectModelTest {
     @Test
     public void testToCollection() {
         assertTrue(runtimeObjectModel.toCollection(null).isEmpty());
-        Record<String> record = new Record<String>() {
-
-            private Map<String, String> properties = new HashMap<String, String>() {
-                {
-                    put("a", "1");
-                    put("b", "2");
-                }
-            };
+        final Map<String, String> properties = new HashMap<>();
+        properties.put("a", "1");
+        properties.put("b", "2");
+        Record<String> record1 = new Record<String>() {
 
             @Override
             public String getProperty(String name) {
@@ -165,7 +152,7 @@ public class AbstractRuntimeObjectModelTest {
                 return properties.keySet();
             }
         };
-        Collection testCollection = runtimeObjectModel.toCollection(record);
+        Collection<Object> testCollection = runtimeObjectModel.toCollection(record1);
         assertEquals(2, testCollection.size());
         assertTrue(testCollection.contains("a"));
         assertTrue(testCollection.contains("b"));
@@ -173,14 +160,11 @@ public class AbstractRuntimeObjectModelTest {
 
     @Test
     public void testToMap() {
-        final Map<String, String> properties = new HashMap<String, String>() {
-            {
-                put("a", "1");
-                put("b", "2");
-            }
-        };
+        final Map<String, String> properties = new HashMap<>();
+        properties.put("a", "1");
+        properties.put("b", "2");
         assertEquals(properties, runtimeObjectModel.toMap(properties));
-        Record<String> record = new Record<String>() {
+        Record<String> records = new Record<String>() {
             @Override
             public String getProperty(String name) {
                 return properties.get(name);
@@ -191,7 +175,7 @@ public class AbstractRuntimeObjectModelTest {
                 return properties.keySet();
             }
         };
-        assertEquals(properties, runtimeObjectModel.toMap(record));
+        assertEquals(properties, runtimeObjectModel.toMap(records));
         assertTrue(runtimeObjectModel.toMap(null).isEmpty());
     }
 }
