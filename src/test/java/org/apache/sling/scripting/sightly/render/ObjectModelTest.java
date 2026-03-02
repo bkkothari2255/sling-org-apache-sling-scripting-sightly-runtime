@@ -53,6 +53,11 @@ class ObjectModelTest {
     private static final String INT = "int";
     private static final String INTEGER = "integer";
 
+    private static final Integer[] TEST_ARRAY = new Integer[] {1, 2, 3};
+    private static final int[] TEST_PRIMITIVE_ARRAY = new int[] {1, 2, 3};
+
+    private static final List<Integer> TEST_LIST = Arrays.asList(TEST_ARRAY);
+
     @Test
     void testToBoolean() {
         assertFalse(ObjectModel.toBoolean(null));
@@ -68,22 +73,19 @@ class ObjectModelTest {
         assertTrue(ObjectModel.toBoolean("true"));
         assertTrue(ObjectModel.toBoolean("TRUE"));
         assertTrue(ObjectModel.toBoolean("TrUE"));
-        Integer[] testArray = new Integer[] {1, 2, 3};
-        int[] testPrimitiveArray = new int[] {1, 2, 3};
-        List<?> testList = Arrays.asList(testArray);
-        assertTrue(ObjectModel.toBoolean(testArray));
-        assertTrue(ObjectModel.toBoolean(testPrimitiveArray));
+        assertTrue(ObjectModel.toBoolean(TEST_ARRAY));
+        assertTrue(ObjectModel.toBoolean(TEST_PRIMITIVE_ARRAY));
         assertFalse(ObjectModel.toBoolean(new Integer[] {}));
-        assertTrue(ObjectModel.toBoolean(testList));
+        assertTrue(ObjectModel.toBoolean(TEST_LIST));
         assertFalse(ObjectModel.toBoolean(Collections.emptyList()));
         Map<String, Integer> map = new HashMap<>();
         map.put("one", 1);
         map.put("two", 2);
         assertTrue(ObjectModel.toBoolean(map));
         assertFalse(ObjectModel.toBoolean(Collections.emptyMap()));
-        assertTrue(ObjectModel.toBoolean(testList.iterator()));
+        assertTrue(ObjectModel.toBoolean(TEST_LIST.iterator()));
         assertFalse(ObjectModel.toBoolean(Collections.emptyList().iterator()));
-        assertTrue(ObjectModel.toBoolean(new Bag<>(testArray)));
+        assertTrue(ObjectModel.toBoolean(new Bag<>(TEST_ARRAY)));
         assertFalse(ObjectModel.toBoolean(new Bag<>(new Integer[] {})));
         assertTrue(ObjectModel.toBoolean(new Date()));
 
@@ -123,12 +125,9 @@ class ObjectModelTest {
         assertEquals("1", ObjectModel.toString("1"));
         assertEquals("1", ObjectModel.toString(1));
         assertEquals("CONSTANT", ObjectModel.toString(TestEnum.CONSTANT));
-        Integer[] testArray = new Integer[] {1, 2, 3};
-        int[] testPrimitiveArray = new int[] {1, 2, 3};
-        List<Integer> testList = Arrays.asList(testArray);
-        assertEquals(COMMA_DELIMITED_LIST, ObjectModel.toString(testList));
-        assertEquals(COMMA_DELIMITED_LIST, ObjectModel.toString(testArray));
-        assertEquals(COMMA_DELIMITED_LIST, ObjectModel.toString(testPrimitiveArray));
+        assertEquals(COMMA_DELIMITED_LIST, ObjectModel.toString(TEST_LIST));
+        assertEquals(COMMA_DELIMITED_LIST, ObjectModel.toString(TEST_ARRAY));
+        assertEquals(COMMA_DELIMITED_LIST, ObjectModel.toString(TEST_PRIMITIVE_ARRAY));
         assertEquals(TEST_URI, ObjectModel.toString(new URI(TEST_URI)));
 
         assertEquals("", ObjectModel.toString(Optional.empty()));
@@ -145,21 +144,18 @@ class ObjectModelTest {
         assertTrue(ObjectModel.toCollection(null).isEmpty());
         StringBuilder sb = new StringBuilder();
         assertEquals(Collections.singletonList(sb), ObjectModel.toCollection(sb));
-        Integer[] testArray = new Integer[] {1, 2, 3};
-        int[] testPrimitiveArray = new int[] {1, 2, 3};
-        List<Integer> testList = Arrays.asList(testArray);
         Map<String, Integer> map = new HashMap<>();
         map.put("one", 1);
         map.put("two", 2);
-        assertEquals(testList, ObjectModel.toCollection(testArray));
-        assertEquals(testList, ObjectModel.toCollection(testPrimitiveArray));
-        assertEquals(testList, ObjectModel.toCollection(testList));
+        assertEquals(TEST_LIST, ObjectModel.toCollection(TEST_ARRAY));
+        assertEquals(TEST_LIST, ObjectModel.toCollection(TEST_PRIMITIVE_ARRAY));
+        assertEquals(TEST_LIST, ObjectModel.toCollection(TEST_LIST));
         Collection<Object> mapCollection = ObjectModel.toCollection(map);
         assertTrue(mapCollection.containsAll(map.keySet()) && mapCollection.size() == map.size());
-        ArrayList<Integer> arrayList = new ArrayList<>(testList);
-        assertEquals(testList, ObjectModel.toCollection(arrayList));
-        assertEquals(testList, ObjectModel.toCollection(testList.iterator()));
-        assertEquals(testList, ObjectModel.toCollection(new Bag<>(testArray)));
+        ArrayList<Integer> arrayList = new ArrayList<>(TEST_LIST);
+        assertEquals(TEST_LIST, ObjectModel.toCollection(arrayList));
+        assertEquals(TEST_LIST, ObjectModel.toCollection(TEST_LIST.iterator()));
+        assertEquals(TEST_LIST, ObjectModel.toCollection(new Bag<>(TEST_ARRAY)));
         String stringObject = "test";
         Integer numberObject = 1;
         Collection<Object> stringCollection = ObjectModel.toCollection(stringObject);
@@ -177,17 +173,13 @@ class ObjectModelTest {
     @Test
     void testCollectionToString() {
         assertEquals("", ObjectModel.collectionToString(null));
-        Integer[] testArray = new Integer[] {1, 2, 3};
-        List<Integer> testList = Arrays.asList(testArray);
-        assertEquals(COMMA_DELIMITED_LIST, ObjectModel.collectionToString(testList));
+        assertEquals(COMMA_DELIMITED_LIST, ObjectModel.collectionToString(TEST_LIST));
     }
 
     @Test
     void testFromIterator() {
         assertTrue(ObjectModel.fromIterator(null).isEmpty());
-        Integer[] testArray = new Integer[] {1, 2, 3};
-        List<Integer> testList = Arrays.asList(testArray);
-        assertEquals(testList, ObjectModel.fromIterator((Iterator) testList.iterator()));
+        assertEquals(TEST_LIST, ObjectModel.fromIterator((Iterator) TEST_LIST.iterator()));
     }
 
     @Test
@@ -196,14 +188,12 @@ class ObjectModelTest {
         assertNull(ObjectModel.resolveProperty(this, null));
         assertNull(ObjectModel.resolveProperty(null, null));
         assertEquals(0, ObjectModel.resolveProperty(Collections.emptyList(), "size"));
-        Integer[] testArray = new Integer[] {1, 2, 3};
-        assertEquals(2, ObjectModel.resolveProperty(testArray, 1));
-        assertNull(ObjectModel.resolveProperty(testArray, 3));
-        assertNull(ObjectModel.resolveProperty(testArray, -1));
-        List<Integer> testList = Arrays.asList(testArray);
-        assertEquals(2, ObjectModel.resolveProperty(testList, 1));
-        assertNull(ObjectModel.resolveProperty(testList, 3));
-        assertNull(ObjectModel.resolveProperty(testList, -1));
+        assertEquals(2, ObjectModel.resolveProperty(TEST_ARRAY, 1));
+        assertNull(ObjectModel.resolveProperty(TEST_ARRAY, 3));
+        assertNull(ObjectModel.resolveProperty(TEST_ARRAY, -1));
+        assertEquals(2, ObjectModel.resolveProperty(TEST_LIST, 1));
+        assertNull(ObjectModel.resolveProperty(TEST_LIST, 3));
+        assertNull(ObjectModel.resolveProperty(TEST_LIST, -1));
         Map<String, Integer> map = new HashMap<>();
         map.put("one", 1);
         map.put("two", 2);
@@ -225,7 +215,7 @@ class ObjectModelTest {
                 "Did not expect to be able to access public fields from package protected classes.");
         assertEquals(
                 3,
-                ObjectModel.resolveProperty(testArray, "length"),
+                ObjectModel.resolveProperty(TEST_ARRAY, "length"),
                 "Expected to be able to access an array's length property.");
         assertNotNull(
                 ObjectModel.resolveProperty(johnDoe, "lastName"),
@@ -277,14 +267,12 @@ class ObjectModelTest {
     @Test
     void testGetIndex() {
         assertNull(ObjectModel.getIndex(null, 0));
-        Integer[] testArray = new Integer[] {1, 2, 3};
-        assertEquals(2, ObjectModel.getIndex(testArray, 1));
-        assertNull(ObjectModel.getIndex(testArray, 3));
-        assertNull(ObjectModel.getIndex(testArray, -1));
-        List<Integer> testList = Arrays.asList(testArray);
-        assertEquals(2, ObjectModel.getIndex(testList, 1));
-        assertNull(ObjectModel.getIndex(testList, 3));
-        assertNull(ObjectModel.getIndex(testList, -1));
+        assertEquals(2, ObjectModel.getIndex(TEST_ARRAY, 1));
+        assertNull(ObjectModel.getIndex(TEST_ARRAY, 3));
+        assertNull(ObjectModel.getIndex(TEST_ARRAY, -1));
+        assertEquals(2, ObjectModel.getIndex(TEST_LIST, 1));
+        assertNull(ObjectModel.getIndex(TEST_LIST, 3));
+        assertNull(ObjectModel.getIndex(TEST_LIST, -1));
         Map<Integer, String> stringMap = new HashMap<>();
         stringMap.put(1, "one");
         stringMap.put(2, "two");
