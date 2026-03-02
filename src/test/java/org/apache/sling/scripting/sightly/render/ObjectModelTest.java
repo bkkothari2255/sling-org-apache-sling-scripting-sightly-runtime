@@ -38,6 +38,7 @@ import org.apache.sling.scripting.sightly.render.testobjects.TestEnum2;
 import org.apache.sling.scripting.sightly.render.testobjects.internal.AdultFactory;
 import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -56,51 +57,59 @@ class ObjectModelTest {
     private static final Integer[] TEST_ARRAY = new Integer[] {1, 2, 3};
     private static final int[] TEST_PRIMITIVE_ARRAY = new int[] {1, 2, 3};
 
-    private static final List<Integer> TEST_LIST = Arrays.asList(TEST_ARRAY);
+    private static final List<Integer> TEST_LIST = Collections.unmodifiableList(Arrays.asList(TEST_ARRAY));
 
     @Test
     void testToBoolean() {
-        assertFalse(ObjectModel.toBoolean(null));
-        assertFalse(ObjectModel.toBoolean(0));
-        assertTrue(ObjectModel.toBoolean(123456));
-        assertFalse(ObjectModel.toBoolean(""));
-        assertFalse(ObjectModel.toBoolean(false));
-        assertFalse(ObjectModel.toBoolean(Boolean.FALSE));
-        assertFalse(ObjectModel.toBoolean(new int[0]));
-        assertTrue(ObjectModel.toBoolean("FalSe"));
-        assertTrue(ObjectModel.toBoolean("false"));
-        assertTrue(ObjectModel.toBoolean("FALSE"));
-        assertTrue(ObjectModel.toBoolean("true"));
-        assertTrue(ObjectModel.toBoolean("TRUE"));
-        assertTrue(ObjectModel.toBoolean("TrUE"));
-        assertTrue(ObjectModel.toBoolean(TEST_ARRAY));
-        assertTrue(ObjectModel.toBoolean(TEST_PRIMITIVE_ARRAY));
-        assertFalse(ObjectModel.toBoolean(new Integer[] {}));
-        assertTrue(ObjectModel.toBoolean(TEST_LIST));
-        assertFalse(ObjectModel.toBoolean(Collections.emptyList()));
-        Map<String, Integer> map = new HashMap<>();
-        map.put("one", 1);
-        map.put("two", 2);
-        assertTrue(ObjectModel.toBoolean(map));
-        assertFalse(ObjectModel.toBoolean(Collections.emptyMap()));
-        assertTrue(ObjectModel.toBoolean(TEST_LIST.iterator()));
-        assertFalse(ObjectModel.toBoolean(Collections.emptyList().iterator()));
-        assertTrue(ObjectModel.toBoolean(new Bag<>(TEST_ARRAY)));
-        assertFalse(ObjectModel.toBoolean(new Bag<>(new Integer[] {})));
-        assertTrue(ObjectModel.toBoolean(new Date()));
+        Map<String, String> populatedMap = new HashMap<>();
+        populatedMap.put("one", "entry");
 
-        assertFalse(ObjectModel.toBoolean(Optional.empty()));
-        assertFalse(ObjectModel.toBoolean(Optional.of("")));
-        assertFalse(ObjectModel.toBoolean(Optional.of(false)));
-        assertFalse(ObjectModel.toBoolean(Optional.ofNullable(null)));
-        assertTrue(ObjectModel.toBoolean(Optional.of(true)));
-        assertTrue(ObjectModel.toBoolean(Optional.of("pass")));
-        assertTrue(ObjectModel.toBoolean(Optional.of(1)));
-        assertTrue(ObjectModel.toBoolean(new Object()));
-        Map<String, String> map2 = new HashMap<>();
-        assertFalse(ObjectModel.toBoolean(map2));
-        map2.put("one", "entry");
-        assertTrue(ObjectModel.toBoolean(map2));
+        Object[] falsyInputs = {
+            null,
+            0,
+            "",
+            false,
+            Boolean.FALSE,
+            new int[0],
+            new Integer[] {},
+            Collections.emptyList(),
+            Collections.emptyMap(),
+            new HashMap<>(),
+            Collections.emptyList().iterator(),
+            new Bag<>(new Integer[] {}),
+            Optional.empty(),
+            Optional.of(""),
+            Optional.of(false),
+            Optional.ofNullable(null)
+        };
+
+        Object[] truthyInputs = {
+            123456,
+            "FalSe",
+            "false",
+            "FALSE",
+            "true",
+            "TRUE",
+            "TrUE",
+            TEST_ARRAY,
+            TEST_PRIMITIVE_ARRAY,
+            TEST_LIST,
+            TEST_LIST.iterator(),
+            new Bag<>(TEST_ARRAY),
+            new Date(),
+            new Object(),
+            populatedMap,
+            Optional.of(true),
+            Optional.of("pass"),
+            Optional.of(1)
+        };
+
+        for (Object input : falsyInputs) {
+            assertFalse(ObjectModel.toBoolean(input), "Should be false for: " + input);
+        }
+        for (Object input : truthyInputs) {
+            assertTrue(ObjectModel.toBoolean(input), "Should be true for: " + input);
+        }
     }
 
     @Test
@@ -184,54 +193,62 @@ class ObjectModelTest {
 
     @Test
     void testResolveProperty() {
-        assertNull(ObjectModel.resolveProperty(null, 0));
-        assertNull(ObjectModel.resolveProperty(this, null));
-        assertNull(ObjectModel.resolveProperty(null, null));
-        assertEquals(0, ObjectModel.resolveProperty(Collections.emptyList(), "size"));
-        assertEquals(2, ObjectModel.resolveProperty(TEST_ARRAY, 1));
-        assertNull(ObjectModel.resolveProperty(TEST_ARRAY, 3));
-        assertNull(ObjectModel.resolveProperty(TEST_ARRAY, -1));
-        assertEquals(2, ObjectModel.resolveProperty(TEST_LIST, 1));
-        assertNull(ObjectModel.resolveProperty(TEST_LIST, 3));
-        assertNull(ObjectModel.resolveProperty(TEST_LIST, -1));
         Map<String, Integer> map = new HashMap<>();
         map.put("one", 1);
         map.put("two", 2);
-        assertEquals(1, ObjectModel.resolveProperty(map, "one"));
-        assertNull(ObjectModel.resolveProperty(map, null));
-        assertNull(ObjectModel.resolveProperty(map, ""));
+
         Map<Integer, String> stringMap = new HashMap<>();
         stringMap.put(1, "one");
         stringMap.put(2, "two");
-        assertEquals("one", ObjectModel.resolveProperty(stringMap, 1));
-        assertEquals("two", ObjectModel.resolveProperty(stringMap, 2));
-        Person johnDoe = AdultFactory.createAdult("John", "Doe");
-        assertEquals(
-                1l,
-                ObjectModel.resolveProperty(johnDoe, "CONSTANT"),
-                "Expected to be able to access public static final constants.");
-        assertNull(
-                ObjectModel.resolveProperty(johnDoe, "TODAY"),
-                "Did not expect to be able to access public fields from package protected classes.");
-        assertEquals(
-                3,
-                ObjectModel.resolveProperty(TEST_ARRAY, "length"),
-                "Expected to be able to access an array's length property.");
-        assertNotNull(
-                ObjectModel.resolveProperty(johnDoe, "lastName"),
-                "Expected not null result for invocation of interface method on implementation class.");
-        assertNull(
-                ObjectModel.resolveProperty(johnDoe, "fullName"),
-                "Expected null result for public method available on implementation but not exposed by interface.");
-        assertNull(ObjectModel.resolveProperty(johnDoe, "nomethod"), "Expected null result for inexistent method.");
 
+        Person johnDoe = AdultFactory.createAdult("John", "Doe");
         OptionalTest optionalTest = new OptionalTest();
-        assertEquals(Optional.of(STRING), ObjectModel.resolveProperty(optionalTest, STRING));
-        assertEquals(Optional.of(1), ObjectModel.resolveProperty(optionalTest, INT));
-        assertEquals(Optional.of(1), ObjectModel.resolveProperty(Optional.of(optionalTest), INT));
-        assertEquals(Optional.of(Integer.valueOf(1)), ObjectModel.resolveProperty(optionalTest, INTEGER));
-        assertEquals(Optional.of(Integer.valueOf(1)), ObjectModel.resolveProperty(Optional.of(optionalTest), INTEGER));
-        assertEquals(null, ObjectModel.resolveProperty(Optional.empty(), INTEGER));
+
+        assertAll(
+                "Property Resolution",
+                () -> assertNull(ObjectModel.resolveProperty(null, 0)),
+                () -> assertNull(ObjectModel.resolveProperty(this, null)),
+                () -> assertNull(ObjectModel.resolveProperty(null, null)),
+                () -> assertEquals(0, ObjectModel.resolveProperty(Collections.emptyList(), "size")),
+                () -> assertEquals(2, ObjectModel.resolveProperty(TEST_ARRAY, 1)),
+                () -> assertNull(ObjectModel.resolveProperty(TEST_ARRAY, 3)),
+                () -> assertNull(ObjectModel.resolveProperty(TEST_ARRAY, -1)),
+                () -> assertEquals(2, ObjectModel.resolveProperty(TEST_LIST, 1)),
+                () -> assertNull(ObjectModel.resolveProperty(TEST_LIST, 3)),
+                () -> assertNull(ObjectModel.resolveProperty(TEST_LIST, -1)),
+                () -> assertEquals(1, ObjectModel.resolveProperty(map, "one")),
+                () -> assertNull(ObjectModel.resolveProperty(map, null)),
+                () -> assertNull(ObjectModel.resolveProperty(map, "")),
+                () -> assertEquals("one", ObjectModel.resolveProperty(stringMap, 1)),
+                () -> assertEquals("two", ObjectModel.resolveProperty(stringMap, 2)),
+                () -> assertEquals(
+                        1L,
+                        ObjectModel.resolveProperty(johnDoe, "CONSTANT"),
+                        "Expected to be able to access public static final constants."),
+                () -> assertNull(
+                        ObjectModel.resolveProperty(johnDoe, "TODAY"),
+                        "Did not expect to be able to access public fields from package protected classes."),
+                () -> assertEquals(
+                        3,
+                        ObjectModel.resolveProperty(TEST_ARRAY, "length"),
+                        "Expected to be able to access an array's length property."),
+                () -> assertNotNull(
+                        ObjectModel.resolveProperty(johnDoe, "lastName"),
+                        "Expected not null result for invocation of interface method on implementation class."),
+                () -> assertNull(
+                        ObjectModel.resolveProperty(johnDoe, "fullName"),
+                        "Expected null result for public method available on implementation but not exposed by interface."),
+                () -> assertNull(
+                        ObjectModel.resolveProperty(johnDoe, "nomethod"),
+                        "Expected null result for inexistent method."),
+                () -> assertEquals(Optional.of(STRING), ObjectModel.resolveProperty(optionalTest, STRING)),
+                () -> assertEquals(Optional.of(1), ObjectModel.resolveProperty(optionalTest, INT)),
+                () -> assertEquals(Optional.of(1), ObjectModel.resolveProperty(Optional.of(optionalTest), INT)),
+                () -> assertEquals(Optional.of(Integer.valueOf(1)), ObjectModel.resolveProperty(optionalTest, INTEGER)),
+                () -> assertEquals(
+                        Optional.of(Integer.valueOf(1)),
+                        ObjectModel.resolveProperty(Optional.of(optionalTest), INTEGER)),
+                () -> assertNull(ObjectModel.resolveProperty(Optional.empty(), INTEGER)));
     }
 
     /**
