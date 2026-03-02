@@ -37,12 +37,12 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class AbstractRuntimeObjectModelTest {
+class AbstractRuntimeObjectModelTest {
 
     private AbstractRuntimeObjectModel runtimeObjectModel = new AbstractRuntimeObjectModel() {};
 
     @Test
-    public void testResolveProperty() {
+    void testResolveProperty() {
         assertNull(runtimeObjectModel.resolveProperty(null, null));
         assertNull(runtimeObjectModel.resolveProperty(this, null));
         assertNull(runtimeObjectModel.resolveProperty(this, ""));
@@ -88,7 +88,7 @@ public class AbstractRuntimeObjectModelTest {
     }
 
     @Test
-    public void testToDate() {
+    void testToDate() {
         assertNull(runtimeObjectModel.toDate(null));
         Date testDate = new Date();
         assertEquals(testDate, runtimeObjectModel.toDate(testDate));
@@ -99,7 +99,7 @@ public class AbstractRuntimeObjectModelTest {
     }
 
     @Test
-    public void testToInstant() {
+    void testToInstant() {
         assertNull(runtimeObjectModel.toInstant(null));
         Date testDate = new Date();
         assertEquals(testDate, Date.from(runtimeObjectModel.toInstant(testDate)));
@@ -110,14 +110,14 @@ public class AbstractRuntimeObjectModelTest {
     }
 
     @Test
-    public void testGetPropertyNullChecks() {
+    void testGetPropertyNullChecks() {
         assertNull(runtimeObjectModel.getProperty(null, null));
         assertNull(runtimeObjectModel.getProperty(this, null));
         assertNull(runtimeObjectModel.getProperty(this, ""));
     }
 
     @Test
-    public void testIsDate() {
+    void testIsDate() {
         assertFalse(runtimeObjectModel.isDate(null));
         assertTrue(runtimeObjectModel.isDate(new Date()));
         assertTrue(runtimeObjectModel.isDate(Calendar.getInstance()));
@@ -125,7 +125,7 @@ public class AbstractRuntimeObjectModelTest {
     }
 
     @Test
-    public void testIsNumber() {
+    void testIsNumber() {
         assertFalse(runtimeObjectModel.isNumber(null));
         assertFalse(runtimeObjectModel.isNumber(""));
         assertTrue(runtimeObjectModel.isNumber(0));
@@ -135,7 +135,7 @@ public class AbstractRuntimeObjectModelTest {
     }
 
     @Test
-    public void testToCollection() {
+    void testToCollection() {
         assertTrue(runtimeObjectModel.toCollection(null).isEmpty());
         final Map<String, String> properties = new HashMap<>();
         properties.put("a", "1");
@@ -159,7 +159,7 @@ public class AbstractRuntimeObjectModelTest {
     }
 
     @Test
-    public void testToMap() {
+    void testToMap() {
         final Map<String, String> properties = new HashMap<>();
         properties.put("a", "1");
         properties.put("b", "2");

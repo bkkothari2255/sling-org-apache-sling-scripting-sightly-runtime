@@ -45,7 +45,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class ObjectModelTest {
+class ObjectModelTest {
 
     private static final String COMMA_DELIMITED_LIST = "1,2,3";
     private static final String TEST_URI = "http://localhost/test";
@@ -54,7 +54,7 @@ public class ObjectModelTest {
     private static final String INTEGER = "integer";
 
     @Test
-    public void testToBoolean() {
+    void testToBoolean() {
         assertFalse(ObjectModel.toBoolean(null));
         assertFalse(ObjectModel.toBoolean(0));
         assertTrue(ObjectModel.toBoolean(123456));
@@ -102,7 +102,7 @@ public class ObjectModelTest {
     }
 
     @Test
-    public void testToNumber() {
+    void testToNumber() {
         assertEquals(1, ObjectModel.toNumber(1));
         assertEquals(1, ObjectModel.toNumber("1"));
         assertNull(ObjectModel.toNumber(null));
@@ -118,7 +118,7 @@ public class ObjectModelTest {
     }
 
     @Test
-    public void testToString() throws URISyntaxException {
+    void testToString() throws URISyntaxException {
         assertEquals("", ObjectModel.toString(null));
         assertEquals("1", ObjectModel.toString("1"));
         assertEquals("1", ObjectModel.toString(1));
@@ -141,7 +141,7 @@ public class ObjectModelTest {
     }
 
     @Test
-    public void testToCollection() {
+    void testToCollection() {
         assertTrue(ObjectModel.toCollection(null).isEmpty());
         StringBuilder sb = new StringBuilder();
         assertEquals(Collections.singletonList(sb), ObjectModel.toCollection(sb));
@@ -175,7 +175,7 @@ public class ObjectModelTest {
     }
 
     @Test
-    public void testCollectionToString() {
+    void testCollectionToString() {
         assertEquals("", ObjectModel.collectionToString(null));
         Integer[] testArray = new Integer[] {1, 2, 3};
         List<Integer> testList = Arrays.asList(testArray);
@@ -183,7 +183,7 @@ public class ObjectModelTest {
     }
 
     @Test
-    public void testFromIterator() {
+    void testFromIterator() {
         assertTrue(ObjectModel.fromIterator(null).isEmpty());
         Integer[] testArray = new Integer[] {1, 2, 3};
         List<Integer> testList = Arrays.asList(testArray);
@@ -191,7 +191,7 @@ public class ObjectModelTest {
     }
 
     @Test
-    public void testResolveProperty() {
+    void testResolveProperty() {
         assertNull(ObjectModel.resolveProperty(null, 0));
         assertNull(ObjectModel.resolveProperty(this, null));
         assertNull(ObjectModel.resolveProperty(null, null));
@@ -249,7 +249,7 @@ public class ObjectModelTest {
      * by their name
      */
     @Test
-    public void testResolvePropertyFromEnum() {
+    void testResolvePropertyFromEnum() {
         assertEquals(TestEnum2.ONE, ObjectModel.resolveProperty(TestEnum2.class, "ONE"));
         assertEquals(TestEnum2.TWO, ObjectModel.resolveProperty(TestEnum2.class, "TWO"));
         assertNull(ObjectModel.resolveProperty(TestEnum.class, "INVALID"));
@@ -264,7 +264,7 @@ public class ObjectModelTest {
      * Verify that values of an static method of an enumeration can be invoked
      */
     @Test
-    public void testResolveMethodFromEnum() {
+    void testResolveMethodFromEnum() {
         Object value = ObjectModel.resolveProperty(TestEnum2.class, "values");
         assertNotNull(value);
         assertTrue(value.getClass().isArray());
@@ -275,7 +275,7 @@ public class ObjectModelTest {
     }
 
     @Test
-    public void testGetIndex() {
+    void testGetIndex() {
         assertNull(ObjectModel.getIndex(null, 0));
         Integer[] testArray = new Integer[] {1, 2, 3};
         assertEquals(2, ObjectModel.getIndex(testArray, 1));
@@ -297,7 +297,7 @@ public class ObjectModelTest {
      * by their ordinal value
      */
     @Test
-    public void testGetIndexFromEnum() {
+    void testGetIndexFromEnum() {
         assertEquals(TestEnum2.ONE, ObjectModel.getIndex(TestEnum2.class, 0));
         Object two = ObjectModel.getIndex(TestEnum2.class, 1);
         assertEquals(TestEnum2.TWO, two);
@@ -306,7 +306,7 @@ public class ObjectModelTest {
     }
 
     @Test
-    public void testClassBasedMethodsForNulls() {
+    void testClassBasedMethodsForNulls() {
         assertNull(ObjectModel.getField(null, null));
         assertNull(ObjectModel.getField("", null));
         assertNull(ObjectModel.getField(this, ""));
