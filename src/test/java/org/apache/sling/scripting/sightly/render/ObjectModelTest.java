@@ -193,6 +193,9 @@ class ObjectModelTest {
 
     @Test
     void testResolveProperty() {
+        Person johnDoe = AdultFactory.createAdult("John", "Doe");
+        OptionalTest optionalTest = new OptionalTest();
+
         Map<String, Integer> map = new HashMap<>();
         map.put("one", 1);
         map.put("two", 2);
@@ -201,26 +204,35 @@ class ObjectModelTest {
         stringMap.put(1, "one");
         stringMap.put(2, "two");
 
-        Person johnDoe = AdultFactory.createAdult("John", "Doe");
-        OptionalTest optionalTest = new OptionalTest();
-
         assertAll(
-                "Property Resolution",
+                "Null and Boundary Checks",
                 () -> assertNull(ObjectModel.resolveProperty(null, 0)),
                 () -> assertNull(ObjectModel.resolveProperty(this, null)),
                 () -> assertNull(ObjectModel.resolveProperty(null, null)),
-                () -> assertEquals(0, ObjectModel.resolveProperty(Collections.emptyList(), "size")),
-                () -> assertEquals(2, ObjectModel.resolveProperty(TEST_ARRAY, 1)),
                 () -> assertNull(ObjectModel.resolveProperty(TEST_ARRAY, 3)),
                 () -> assertNull(ObjectModel.resolveProperty(TEST_ARRAY, -1)),
-                () -> assertEquals(2, ObjectModel.resolveProperty(TEST_LIST, 1)),
                 () -> assertNull(ObjectModel.resolveProperty(TEST_LIST, 3)),
-                () -> assertNull(ObjectModel.resolveProperty(TEST_LIST, -1)),
+                () -> assertNull(ObjectModel.resolveProperty(TEST_LIST, -1)));
+
+        assertAll(
+                "Indexed Access",
+                () -> assertEquals(2, ObjectModel.resolveProperty(TEST_ARRAY, 1)),
+                () -> assertEquals(2, ObjectModel.resolveProperty(TEST_LIST, 1)),
+                () -> assertEquals(
+                        3,
+                        ObjectModel.resolveProperty(TEST_ARRAY, "length"),
+                        "Expected to be able to access an array's length property."));
+
+        assertAll(
+                "Map Access",
                 () -> assertEquals(1, ObjectModel.resolveProperty(map, "one")),
                 () -> assertNull(ObjectModel.resolveProperty(map, null)),
                 () -> assertNull(ObjectModel.resolveProperty(map, "")),
                 () -> assertEquals("one", ObjectModel.resolveProperty(stringMap, 1)),
-                () -> assertEquals("two", ObjectModel.resolveProperty(stringMap, 2)),
+                () -> assertEquals("two", ObjectModel.resolveProperty(stringMap, 2)));
+
+        assertAll(
+                "POJO Properties",
                 () -> assertEquals(
                         1L,
                         ObjectModel.resolveProperty(johnDoe, "CONSTANT"),
@@ -228,19 +240,23 @@ class ObjectModelTest {
                 () -> assertNull(
                         ObjectModel.resolveProperty(johnDoe, "TODAY"),
                         "Did not expect to be able to access public fields from package protected classes."),
-                () -> assertEquals(
-                        3,
-                        ObjectModel.resolveProperty(TEST_ARRAY, "length"),
-                        "Expected to be able to access an array's length property."),
                 () -> assertNotNull(
                         ObjectModel.resolveProperty(johnDoe, "lastName"),
-                        "Expected not null result for invocation of interface method on implementation class."),
+                        "Expected not null result for invocation of interface method on implementation class."));
+
+        assertAll(
+                "Negative POJO checks",
                 () -> assertNull(
                         ObjectModel.resolveProperty(johnDoe, "fullName"),
                         "Expected null result for public method available on implementation but not exposed by interface."),
                 () -> assertNull(
                         ObjectModel.resolveProperty(johnDoe, "nomethod"),
-                        "Expected null result for inexistent method."),
+                        "Expected null result for inexistent method."));
+
+        assertEquals(0, ObjectModel.resolveProperty(Collections.emptyList(), "size"));
+
+        assertAll(
+                "Optional Support",
                 () -> assertEquals(Optional.of(STRING), ObjectModel.resolveProperty(optionalTest, STRING)),
                 () -> assertEquals(Optional.of(1), ObjectModel.resolveProperty(optionalTest, INT)),
                 () -> assertEquals(Optional.of(1), ObjectModel.resolveProperty(Optional.of(optionalTest), INT)),
