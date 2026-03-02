@@ -38,7 +38,6 @@ import org.apache.sling.scripting.sightly.render.testobjects.TestEnum2;
 import org.apache.sling.scripting.sightly.render.testobjects.internal.AdultFactory;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -195,7 +194,6 @@ class ObjectModelTest {
     void testResolveProperty() {
         Person johnDoe = AdultFactory.createAdult("John", "Doe");
         OptionalTest optionalTest = new OptionalTest();
-
         Map<String, Integer> map = new HashMap<>();
         map.put("one", 1);
         map.put("two", 2);
@@ -204,67 +202,64 @@ class ObjectModelTest {
         stringMap.put(1, "one");
         stringMap.put(2, "two");
 
-        assertAll(
-                "Null and Boundary Checks",
-                () -> assertNull(ObjectModel.resolveProperty(null, 0)),
-                () -> assertNull(ObjectModel.resolveProperty(this, null)),
-                () -> assertNull(ObjectModel.resolveProperty(null, null)),
-                () -> assertNull(ObjectModel.resolveProperty(TEST_ARRAY, 3)),
-                () -> assertNull(ObjectModel.resolveProperty(TEST_ARRAY, -1)),
-                () -> assertNull(ObjectModel.resolveProperty(TEST_LIST, 3)),
-                () -> assertNull(ObjectModel.resolveProperty(TEST_LIST, -1)));
+        PropertyTestCase[] cases = {
+            new PropertyTestCase(null, 0, null, null),
+            new PropertyTestCase(this, null, null, null),
+            new PropertyTestCase(null, null, null, null),
+            new PropertyTestCase(Collections.emptyList(), "size", 0, null),
+            new PropertyTestCase(TEST_ARRAY, 1, 2, null),
+            new PropertyTestCase(TEST_ARRAY, 3, null, null),
+            new PropertyTestCase(TEST_ARRAY, -1, null, null),
+            new PropertyTestCase(TEST_LIST, 1, 2, null),
+            new PropertyTestCase(TEST_LIST, 3, null, null),
+            new PropertyTestCase(TEST_LIST, -1, null, null),
+            new PropertyTestCase(map, "one", 1, null),
+            new PropertyTestCase(map, null, null, null),
+            new PropertyTestCase(map, "", null, null),
+            new PropertyTestCase(stringMap, 1, "one", null),
+            new PropertyTestCase(stringMap, 2, "two", null),
+            new PropertyTestCase(
+                    johnDoe, "CONSTANT", 1L, "Expected to be able to access public static final constants."),
+            new PropertyTestCase(
+                    johnDoe,
+                    "TODAY",
+                    null,
+                    "Did not expect to be able to access public fields from package protected classes."),
+            new PropertyTestCase(TEST_ARRAY, "length", 3, "Expected to be able to access an array's length property."),
+            new PropertyTestCase(
+                    johnDoe,
+                    "fullName",
+                    null,
+                    "Expected null result for public method available on implementation but not exposed by interface."),
+            new PropertyTestCase(johnDoe, "nomethod", null, "Expected null result for inexistent method."),
+            new PropertyTestCase(optionalTest, STRING, Optional.of(STRING), null),
+            new PropertyTestCase(optionalTest, INT, Optional.of(1), null),
+            new PropertyTestCase(Optional.of(optionalTest), INT, Optional.of(1), null),
+            new PropertyTestCase(optionalTest, INTEGER, Optional.of(1), null),
+            new PropertyTestCase(Optional.of(optionalTest), INTEGER, Optional.of(1), null),
+            new PropertyTestCase(Optional.empty(), INTEGER, null, null)
+        };
 
-        assertAll(
-                "Indexed Access",
-                () -> assertEquals(2, ObjectModel.resolveProperty(TEST_ARRAY, 1)),
-                () -> assertEquals(2, ObjectModel.resolveProperty(TEST_LIST, 1)),
-                () -> assertEquals(
-                        3,
-                        ObjectModel.resolveProperty(TEST_ARRAY, "length"),
-                        "Expected to be able to access an array's length property."));
+        for (PropertyTestCase c : cases) {
+            assertEquals(c.expected, ObjectModel.resolveProperty(c.target, c.property), c.message);
+        }
+        assertNotNull(
+                ObjectModel.resolveProperty(johnDoe, "lastName"),
+                "Expected not null result for invocation of interface method on implementation class.");
+    }
 
-        assertAll(
-                "Map Access",
-                () -> assertEquals(1, ObjectModel.resolveProperty(map, "one")),
-                () -> assertNull(ObjectModel.resolveProperty(map, null)),
-                () -> assertNull(ObjectModel.resolveProperty(map, "")),
-                () -> assertEquals("one", ObjectModel.resolveProperty(stringMap, 1)),
-                () -> assertEquals("two", ObjectModel.resolveProperty(stringMap, 2)));
+    private static class PropertyTestCase {
+        Object target;
+        Object property;
+        Object expected;
+        String message;
 
-        assertAll(
-                "POJO Properties",
-                () -> assertEquals(
-                        1L,
-                        ObjectModel.resolveProperty(johnDoe, "CONSTANT"),
-                        "Expected to be able to access public static final constants."),
-                () -> assertNull(
-                        ObjectModel.resolveProperty(johnDoe, "TODAY"),
-                        "Did not expect to be able to access public fields from package protected classes."),
-                () -> assertNotNull(
-                        ObjectModel.resolveProperty(johnDoe, "lastName"),
-                        "Expected not null result for invocation of interface method on implementation class."));
-
-        assertAll(
-                "Negative POJO checks",
-                () -> assertNull(
-                        ObjectModel.resolveProperty(johnDoe, "fullName"),
-                        "Expected null result for public method available on implementation but not exposed by interface."),
-                () -> assertNull(
-                        ObjectModel.resolveProperty(johnDoe, "nomethod"),
-                        "Expected null result for inexistent method."));
-
-        assertEquals(0, ObjectModel.resolveProperty(Collections.emptyList(), "size"));
-
-        assertAll(
-                "Optional Support",
-                () -> assertEquals(Optional.of(STRING), ObjectModel.resolveProperty(optionalTest, STRING)),
-                () -> assertEquals(Optional.of(1), ObjectModel.resolveProperty(optionalTest, INT)),
-                () -> assertEquals(Optional.of(1), ObjectModel.resolveProperty(Optional.of(optionalTest), INT)),
-                () -> assertEquals(Optional.of(Integer.valueOf(1)), ObjectModel.resolveProperty(optionalTest, INTEGER)),
-                () -> assertEquals(
-                        Optional.of(Integer.valueOf(1)),
-                        ObjectModel.resolveProperty(Optional.of(optionalTest), INTEGER)),
-                () -> assertNull(ObjectModel.resolveProperty(Optional.empty(), INTEGER)));
+        PropertyTestCase(Object target, Object property, Object expected, String message) {
+            this.target = target;
+            this.property = property;
+            this.expected = expected;
+            this.message = message;
+        }
     }
 
     /**
